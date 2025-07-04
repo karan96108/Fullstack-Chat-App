@@ -1,6 +1,5 @@
 import {Server} from "socket.io";
 import http from "http";
-
 import express from "express";
 
 const app = express();
@@ -8,16 +7,22 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173"]
+        origin: [
+            "http://localhost:5173",
+            "http://localhost:3000", 
+            "https://your-frontend-domain.onrender.com"
+        ],
+        credentials: true
     }
-    });
+});
 
 export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
 const userSocketMap = {}; // Use to store online users  {userId: socketId}
-    io.on("connection", (socket) => {
+
+io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
 
   const userId = socket.handshake.query.userId;
@@ -33,4 +38,4 @@ const userSocketMap = {}; // Use to store online users  {userId: socketId}
   });
 });
 
-export {io,app,server};    
+export {io, app, server};    

@@ -1,4 +1,3 @@
-// const express = require('express');
 import express from 'express';
 import dotenv from 'dotenv';
 import {connectDB} from './lib/db.js';
@@ -7,36 +6,54 @@ import messageRoutes from './routes/message.route.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
-import { app,server } from './lib/socket.js';
+import { app, server } from './lib/socket.js';
+
 dotenv.config();
 
-// const app = express();
-
-
-
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
+// Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
-app.use(cookieParser()); // for parsing application/json
+app.use(cookieParser());
+
+// CORS configuration
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://your-frontend-domain.onrender.com'
+];
+
 app.use(cors({
-    origin: "http://localhost:5173", // Adjust the origin as needed
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
 }));
 
-app.use("/api/auth", authRoutes)
-app.use("/api/messages", messageRoutes)
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
+// Production static files
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
 
+// Start server
 server.listen(PORT, () => {
-    console.log("Server is running on PORT:" + PORT);
+    console.log("Server is running on PORT: " + PORT);
     connectDB();
-    });
+});
