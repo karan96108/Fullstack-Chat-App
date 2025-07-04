@@ -3,7 +3,9 @@ import {axiosInstance} from '../lib/axios.js';
 import toast from "react-hot-toast";
 // import { signup } from '../../../backend/src/controllers/auth.controller.js';
 import {io} from 'socket.io-client';
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5050" : "/";
+
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5050" : window.location.origin;
+
 export const useAuthStore = create((set, get) => ({
   authUser: null,
     isSigningUp : false,

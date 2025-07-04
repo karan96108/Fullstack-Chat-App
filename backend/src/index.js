@@ -18,26 +18,17 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 
-// CORS configuration
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://your-frontend-domain.onrender.com'
-];
-
+// CORS configuration - allow all origins in production for now
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: true, // Allow all origins
     credentials: true,
 }));
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -45,6 +36,7 @@ app.use("/api/messages", messageRoutes);
 
 // Production static files
 if (process.env.NODE_ENV === "production") {
+  // Serve static files from the frontend dist directory
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
   // Use a regex to only match non-API routes
@@ -56,5 +48,6 @@ if (process.env.NODE_ENV === "production") {
 // Start server
 server.listen(PORT, () => {
     console.log("Server is running on PORT: " + PORT);
+    console.log("Environment: " + (process.env.NODE_ENV || "development"));
     connectDB();
 });
